@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ping Pong JS</title>
+</head>
+
+<body style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+  <canvas id="game" width="800" height="500" style="border: 1px solid #000;">
+    <p>Seu navegador não possui suporte ao Canvas</p>
+  </canvas>
+  <script type="text/javascript">
+    // Linha
+    class Line {
+      constructor(ctx) {
+        this.ctx = ctx
+      }
+
+      draw() {
+        this.ctx.beginPath();
+        this.ctx.moveTo((canvas.width / 2), 0);
+        this.ctx.lineTo((canvas.width / 2), canvas.height);
+        this.ctx.stroke();
+      }
+    }
+
+    // Player Context
+    class Player {
+      constructor(ctx, commands) {
+        this.ctx = ctx
+        this.commands = commands
+        this.velocity = 3
+        this.width = 20
+        this.height = 100
+        this.posX = 0
+        this.posY = (this.ctx.canvas.height - (this.height)) / 2
+      }
+
+      action() {
+        if (commands.up) {
+          if (this.posY > 0)
+            this.posY -= this.velocity
+        }
+        if (commands.right) {
+          if (this.posX < ((ctx.canvas.width / 2) - this.width))
+            this.posX += this.velocity
+        }
+        if (commands.down) {
+          if (this.posY < (ctx.canvas.height - this.height))
+            this.posY += this.velocity
+        }
+        if (commands.left) {
+          if (this.posX > 0)
+            this.posX -= this.velocity
+        }
+      }
+
+      draw() {
+        this.action()
+        this.ctx.fillStyle = '#000'
+        this.ctx.fillRect(this.posX, this.posY, this.width, this.height)
+      }
+    }
+
+    // Ball Context
+    class Ball {
+      constructor(ctx, player) {
+        this.ctx = ctx
+        this.player = player
+        this.move = true
+        this.velocity = 3
+        this.dirX = 1
+        this.dirY = 1
+        this.posX = this.ctx.canvas.width / 2
+        this.posY = this.ctx.canvas.height / 2
+        this.ray = 10
+        this.startDegree = 0
+        this.endDegree = 2 * Math.PI
+      }
+
+      action() {
+        if (this.move) {
+          this.posX += this.dirX * this.velocity
+          this.posY += this.dirY * this.velocity
+          if (this.posX <= this.ray || this.posX >= (this.ctx.canvas.width - this.ray))
+            this.dirX *= -1
+          if (this.posY <= this.ray || this.posY >= (this.ctx.canvas.height - this.ray))
+            this.dirY *= -1
+        }
+      }
+
+      draw() {
+        this.action()
+        this.ctx.beginPath()
+        this.ctx.arc(this.posX, this.posY, this.ray, this.startDegree, this.endDegree)
+        this.ctx.fillStyle = '#000'
+        this.ctx.fill()
+      }
+    }
+
+    // Enemy Context
+    class Enemy {
+      constructor(ctx, ball) {
+        this.ctx = ctx
+        this.ball = ball
+        this.velocity = 3
+        this.width = 20
+        this.height = 100
+        this.posX = this.ctx.canvas.width - this.width
+        this.posY = (this.ctx.canvas.height - (this.height)) / 2
+      }
+
+      action() {
+
+      }
+
+      draw() {
+        this.action()
+        this.ctx.fillStyle = '#000'
+        this.ctx.fillRect(this.posX, this.posY, this.width, this.height)
+      }
+    }
+
+    // Main Context
+    let canvas = document.getElementById('game')
+    let ctx = canvas.getContext('2d')
+
+    const commands = {
+      up: false,
+      right: false,
+      down: false,
+      left: false
+    }
+
+    const line = new Line(ctx)
+    const player = new Player(ctx, commands)
+    const ball = new Ball(ctx, player)
+    const enemy = new Enemy(ctx, ball)
+
+    window.addEventListener('keydown', (event) => {
+      switch (event.keyCode) {
+        case 37:
+          commands.left = true
+          break
+        case 39:
+          commands.right = true
+          break
+        case 38:
+          commands.up = true
+          break
+        case 40:
+          commands.down = true
+          break
+      }
+    })
+
+    window.addEventListener('keyup', (event) => {
+      switch (event.keyCode) {
+        case 37:
+          commands.left = false
+          break
+        case 39:
+          commands.right = false
+          break
+        case 38:
+          commands.up = false
+          break
+        case 40:
+          commands.down = false
+          break
+      }
+    })
+
+    function game() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      line.draw()
+      player.draw()
+      ball.draw()
+      enemy.draw()
+      requestAnimationFrame(game)
+    }
+
+    requestAnimationFrame(game)
+  </script>
+</body>
+
+</html>
