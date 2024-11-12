@@ -12,6 +12,22 @@
     <p>Seu navegador não possui suporte ao Canvas</p>
   </canvas>
   <script type="text/javascript">
+    // Score
+    class Score {
+      constructor(ctx) {
+        this.ctx = ctx
+        this.p1 = 0
+        this.p2 = 0
+      }
+
+      draw() {
+        this.ctx.font = '14px arial'
+        this.ctx.fillStyle = '#000'
+        this.ctx.fillText(this.p1, (ctx.canvas.width / 4), 50)
+        this.ctx.fillText(this.p2, 3 * (ctx.canvas.width / 4), 50)
+      }
+    }
+
     // Linha
     class Line {
       constructor(ctx) {
@@ -20,8 +36,8 @@
 
       draw() {
         this.ctx.beginPath();
-        this.ctx.moveTo((canvas.width / 2), 0);
-        this.ctx.lineTo((canvas.width / 2), canvas.height);
+        this.ctx.moveTo((canvas.width / 2), 0)
+        this.ctx.lineTo((canvas.width / 2), canvas.height)
         this.ctx.stroke();
       }
     }
@@ -68,6 +84,7 @@
     class Ball {
       constructor(ctx, player) {
         this.ctx = ctx
+        this.score = score
         this.player = player
         this.move = true
         this.velocity = 3
@@ -84,10 +101,21 @@
         if (this.move) {
           this.posX += this.dirX * this.velocity
           this.posY += this.dirY * this.velocity
-          if (this.posX <= this.ray || this.posX >= (this.ctx.canvas.width - this.ray))
+          if (this.posX <= this.ray) {
             this.dirX *= -1
+            this.score.p2 += 1
+          }
+          if (this.posX >= (this.ctx.canvas.width - this.ray)) {
+            this.dirX *= -1
+            this.score.p1 += 1
+          }
           if (this.posY <= this.ray || this.posY >= (this.ctx.canvas.height - this.ray))
             this.dirY *= -1
+          if (
+            ((this.posX + (2 * this.ray)) >= this.player.posX) && this.posX <= (this.player.posX + this.player.width)
+            && (((2 * this.ray) + this.posY) >= this.player.posY && this.posY <= (this.player.posY + this.player.height))
+          )
+            this.dirX *= -1
         }
       }
 
@@ -110,10 +138,40 @@
         this.height = 100
         this.posX = this.ctx.canvas.width - this.width
         this.posY = (this.ctx.canvas.height - (this.height)) / 2
+        this.initialPosX = this.posX
+        this.initialPosY = this.posY
       }
 
       action() {
-
+        if (this.ball.dirX > 0 && this.ball.posX >= (this.ctx.canvas.width / 2)) {
+          if (this.ball.posY + (2 * this.ball.ray) > (this.posY + (this.height / 2))) {
+            this.posY += this.velocity
+          }
+          if (this.ball.posY + (2 * this.ball.ray) < (this.posY + (this.height / 2))) {
+            this.posY -= this.velocity
+          }
+          if (this.ball.posX + (2 * this.ball.ray) < this.posX) {
+            this.posX -= this.velocity
+          }
+        } else {
+          if (this.posY > this.initialPosY) {
+            this.posY -= this.velocity
+          }
+          if (this.posY < this.initialPosY) {
+            this.posY += this.velocity
+          }
+          if (this.posX < this.initialPosX) {
+            this.posX += this.velocity
+          }
+        }
+        if (
+            this.ball.posX + (2 * this.ball.ray) >= (this.posX + this.width)
+            && (
+              this.ball.posY + (2* this.ball.ray) <= (this.posY + this.height)
+              || this.ball.posY + (2 * this.ball.ray) >= this.posY
+            )
+        )
+          this.ball.dirX *= -1
       }
 
       draw() {
@@ -135,8 +193,9 @@
     }
 
     const line = new Line(ctx)
+    const score = new Score(ctx)
     const player = new Player(ctx, commands)
-    const ball = new Ball(ctx, player)
+    const ball = new Ball(ctx, score, player)
     const enemy = new Enemy(ctx, ball)
 
     window.addEventListener('keydown', (event) => {
@@ -176,6 +235,7 @@
     function game() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       line.draw()
+      score.draw()
       player.draw()
       ball.draw()
       enemy.draw()
