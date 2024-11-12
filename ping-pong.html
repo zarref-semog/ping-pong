@@ -7,12 +7,46 @@
   <title>Ping Pong JS</title>
 </head>
 
-<body style="display: flex; justify-content: center; align-items: center; height: 100vh;">
-  <canvas id="game" width="800" height="500" style="border: 1px solid #000;">
+<body style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #000">
+  <canvas id="game" width="800" height="500" style="border: 1px solid #fff">
     <p>Seu navegador não possui suporte ao Canvas</p>
   </canvas>
   <script type="text/javascript">
-    // Score
+    // Timer Context
+    class Timer {
+      constructor(ctx) {
+        this.ctx = ctx
+        this.time = 0
+        this.sec = 0
+        this.min = 0
+        this.width = 100
+        this.height = 20
+      }
+
+      action() {
+        if (this.time >= 60) {
+          this.sec += 1
+          this.time = 0
+        }
+        if (this.sec >= 60) {
+          this.min += 1
+          this.sec = 0
+        }
+        this.time += 1
+      }
+
+      draw() {
+        this.action()
+        this.ctx.fillStyle = '#fff'
+        this.ctx.fillRect((ctx.canvas.width / 2) - (this.width / 2), 0, this.width, this.height)
+        this.ctx.font = '20px arial bold'
+        this.ctx.fillStyle = '#000'
+        this.ctx.fillText(`${this.min < 10 ? '0' + this.min : this.min}:${this.sec < 10 ? '0' + this.sec : this.sec}`,
+          (ctx.canvas.width / 2) - (this.width / 4), 15)
+      }
+    }
+
+    // Score Context
     class Score {
       constructor(ctx) {
         this.ctx = ctx
@@ -21,21 +55,22 @@
       }
 
       draw() {
-        this.ctx.font = '14px arial'
-        this.ctx.fillStyle = '#000'
+        this.ctx.font = '20px arial bold'
+        this.ctx.fillStyle = '#fff'
         this.ctx.fillText(this.p1, (ctx.canvas.width / 4), 50)
         this.ctx.fillText(this.p2, 3 * (ctx.canvas.width / 4), 50)
       }
     }
 
-    // Linha
+    // Line Context
     class Line {
       constructor(ctx) {
         this.ctx = ctx
       }
 
       draw() {
-        this.ctx.beginPath();
+        this.ctx.beginPath()
+        this.ctx.fillStyle = '#fff'
         this.ctx.moveTo((canvas.width / 2), 0)
         this.ctx.lineTo((canvas.width / 2), canvas.height)
         this.ctx.stroke();
@@ -75,19 +110,20 @@
 
       draw() {
         this.action()
-        this.ctx.fillStyle = '#000'
+        this.ctx.fillStyle = '#fff'
         this.ctx.fillRect(this.posX, this.posY, this.width, this.height)
       }
     }
 
     // Ball Context
     class Ball {
-      constructor(ctx, player) {
+      constructor(ctx, timer, score, player) {
         this.ctx = ctx
+        this.timer = timer
         this.score = score
         this.player = player
         this.move = true
-        this.velocity = 3
+        this.velocity = 1
         this.dirX = 1
         this.dirY = 1
         this.posX = this.ctx.canvas.width / 2
@@ -99,6 +135,7 @@
 
       action() {
         if (this.move) {
+          this.velocity += this.timer.min
           this.posX += this.dirX * this.velocity
           this.posY += this.dirY * this.velocity
           if (this.posX <= this.ray) {
@@ -114,8 +151,10 @@
           if (
             ((this.posX + (2 * this.ray)) >= this.player.posX) && this.posX <= (this.player.posX + this.player.width)
             && (((2 * this.ray) + this.posY) >= this.player.posY && this.posY <= (this.player.posY + this.player.height))
-          )
+          ) {
             this.dirX *= -1
+            this.dirY = [1, 0, -1][Math.floor(Math.random() * 3)]
+          }
         }
       }
 
@@ -123,7 +162,7 @@
         this.action()
         this.ctx.beginPath()
         this.ctx.arc(this.posX, this.posY, this.ray, this.startDegree, this.endDegree)
-        this.ctx.fillStyle = '#000'
+        this.ctx.fillStyle = '#fff'
         this.ctx.fill()
       }
     }
@@ -133,7 +172,7 @@
       constructor(ctx, ball) {
         this.ctx = ctx
         this.ball = ball
-        this.velocity = 3
+        this.velocity = 2
         this.width = 20
         this.height = 100
         this.posX = this.ctx.canvas.width - this.width
@@ -165,18 +204,17 @@
           }
         }
         if (
-            this.ball.posX + (2 * this.ball.ray) >= (this.posX + this.width)
-            && (
-              this.ball.posY + (2* this.ball.ray) <= (this.posY + this.height)
-              || this.ball.posY + (2 * this.ball.ray) >= this.posY
-            )
-        )
+          ((this.ball.posX + (2 * this.ball.ray)) >= this.posX) && this.ball.posX <= (this.posX + this.width)
+          && (((2 * this.ball.ray) + this.ball.posY) >= this.posY && this.ball.posY <= (this.posY + this.height))
+        ) {
           this.ball.dirX *= -1
+          this.ball.dirY = [1, 0, -1][Math.floor(Math.random() * 3)];
+        }
       }
 
       draw() {
         this.action()
-        this.ctx.fillStyle = '#000'
+        this.ctx.fillStyle = '#fff'
         this.ctx.fillRect(this.posX, this.posY, this.width, this.height)
       }
     }
@@ -193,9 +231,10 @@
     }
 
     const line = new Line(ctx)
+    const timer = new Timer(ctx)
     const score = new Score(ctx)
     const player = new Player(ctx, commands)
-    const ball = new Ball(ctx, score, player)
+    const ball = new Ball(ctx, timer, score, player)
     const enemy = new Enemy(ctx, ball)
 
     window.addEventListener('keydown', (event) => {
@@ -235,6 +274,7 @@
     function game() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       line.draw()
+      timer.draw()
       score.draw()
       player.draw()
       ball.draw()
