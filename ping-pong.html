@@ -7,32 +7,40 @@
   <title>Ping Pong JS</title>
 </head>
 
-<body style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #000">
+<body
+  style="display: flex; flex-direction: column; overflow: hidden; justify-content: center; align-items: center; height: 100vh; background-color: #000">
   <canvas id="game" width="800" height="500" style="border: 1px solid #fff">
-    <p>Seu navegador não possui suporte ao Canvas</p>
+    <p>Your browser does not support canvas</p>
   </canvas>
+  <br>
+  <div>
+    <button id="start" style="width: 100px; height: 50px; border-radius: 5px; background-color: #fff;"
+      onclick="start()">START
+    </button>
+  </div>
   <script type="text/javascript">
-    // Timer Context
     class Timer {
       constructor(ctx) {
         this.ctx = ctx
-        this.time = 0
         this.sec = 0
         this.min = 0
         this.width = 100
         this.height = 20
+        this.timeCount = false
       }
 
       action() {
-        if (this.time >= 60) {
-          this.sec += 1
-          this.time = 0
+        if (!this.timeCount) {
+          setInterval(() => {
+            if (this.sec > 60) {
+              this.min += 1
+              this.sec = 0
+            } else {
+              this.sec += 1
+            }
+          }, 1000)
+          this.timeCount = true
         }
-        if (this.sec >= 60) {
-          this.min += 1
-          this.sec = 0
-        }
-        this.time += 1
       }
 
       draw() {
@@ -46,7 +54,6 @@
       }
     }
 
-    // Score Context
     class Score {
       constructor(ctx) {
         this.ctx = ctx
@@ -62,7 +69,6 @@
       }
     }
 
-    // Line Context
     class Line {
       constructor(ctx) {
         this.ctx = ctx
@@ -77,7 +83,6 @@
       }
     }
 
-    // Player Context
     class Player {
       constructor(ctx, commands) {
         this.ctx = ctx
@@ -115,15 +120,14 @@
       }
     }
 
-    // Ball Context
     class Ball {
       constructor(ctx, timer, score, player) {
         this.ctx = ctx
         this.timer = timer
         this.score = score
         this.player = player
-        this.move = true
-        this.velocity = 1
+        this.move = false
+        this.velocity = 3
         this.dirX = 1
         this.dirY = 1
         this.posX = this.ctx.canvas.width / 2
@@ -131,20 +135,21 @@
         this.ray = 10
         this.startDegree = 0
         this.endDegree = 2 * Math.PI
+        this.init = false
       }
 
       action() {
+        this.velocity = this.timer.min + 3
         if (this.move) {
-          this.velocity += this.timer.min
           this.posX += this.dirX * this.velocity
           this.posY += this.dirY * this.velocity
           if (this.posX <= this.ray) {
-            this.dirX *= -1
             this.score.p2 += 1
+            this.dirX *= -1
           }
           if (this.posX >= (this.ctx.canvas.width - this.ray)) {
-            this.dirX *= -1
             this.score.p1 += 1
+            this.dirX *= -1
           }
           if (this.posY <= this.ray || this.posY >= (this.ctx.canvas.height - this.ray))
             this.dirY *= -1
@@ -153,13 +158,14 @@
             && (((2 * this.ray) + this.posY) >= this.player.posY && this.posY <= (this.player.posY + this.player.height))
           ) {
             this.dirX *= -1
-            this.dirY = [1, 0, -1][Math.floor(Math.random() * 3)]
+            this.dirY = [1, 0, -1][Math.floor(Math.random() * 3)];
           }
         }
       }
 
       draw() {
         this.action()
+        this.move = true
         this.ctx.beginPath()
         this.ctx.arc(this.posX, this.posY, this.ray, this.startDegree, this.endDegree)
         this.ctx.fillStyle = '#fff'
@@ -167,7 +173,6 @@
       }
     }
 
-    // Enemy Context
     class Enemy {
       constructor(ctx, ball) {
         this.ctx = ctx
@@ -219,7 +224,6 @@
       }
     }
 
-    // Main Context
     let canvas = document.getElementById('game')
     let ctx = canvas.getContext('2d')
 
@@ -242,13 +246,25 @@
         case 37:
           commands.left = true
           break
+        case 65:
+          commands.left = true
+          break
         case 39:
+          commands.right = true
+          break
+        case 68:
           commands.right = true
           break
         case 38:
           commands.up = true
           break
+        case 87:
+          commands.up = true
+          break
         case 40:
+          commands.down = true
+          break
+        case 83:
           commands.down = true
           break
       }
@@ -259,17 +275,39 @@
         case 37:
           commands.left = false
           break
+        case 65:
+          commands.left = false
+          break
         case 39:
+          commands.right = false
+          break
+        case 68:
           commands.right = false
           break
         case 38:
           commands.up = false
           break
+        case 87:
+          commands.up = false
+          break
         case 40:
+          commands.down = false
+          break
+        case 83:
           commands.down = false
           break
       }
     })
+
+    function preview() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      line.draw()
+      timer.draw()
+      score.draw()
+      player.draw()
+      ball.draw()
+      enemy.draw()
+    }
 
     function game() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -282,7 +320,12 @@
       requestAnimationFrame(game)
     }
 
-    requestAnimationFrame(game)
+    function start() {
+      document.getElementById('start').hidden = true
+      requestAnimationFrame(game)
+    }
+
+    preview()
   </script>
 </body>
 
