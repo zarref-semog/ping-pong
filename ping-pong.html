@@ -128,14 +128,17 @@
         this.player = player
         this.move = false
         this.velocity = 3
-        this.dirX = 1
-        this.dirY = 1
+        this.dirX = -1
+        this.dirY = 0
         this.posX = this.ctx.canvas.width / 2
         this.posY = this.ctx.canvas.height / 2
         this.ray = 10
         this.startDegree = 0
         this.endDegree = 2 * Math.PI
-        this.init = false
+      }
+
+      reset() {
+
       }
 
       action() {
@@ -187,6 +190,13 @@
       }
 
       action() {
+        if (
+          (this.posX > this.ctx.canvas.width || this.posX < 0) ||
+          (this.posY > this.ctx.canvas.height || this.posY < 0)
+        ) {
+          this.posX = this.ctx.canvas.width / 2
+          this.posY = this.ctx.canvas.height / 2
+        }
         if (this.ball.dirX > 0 && this.ball.posX >= (this.ctx.canvas.width / 2)) {
           if (this.ball.posY + (2 * this.ball.ray) > (this.posY + (this.height / 2))) {
             this.posY += this.velocity
